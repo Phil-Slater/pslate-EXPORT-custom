@@ -5,12 +5,11 @@ const debug = require('debug')('pslateexport:server');
 const http = require('http');
 const app = express();
 const server = http.createServer(app);
-const { Shopify } = require('@shopify/shopify-api')
-
+const { Shopify } = require('@shopify/shopify-api');
 require('dotenv').config();
 
-const port = 3000;
 
+const port = 3000;
 app.set('port', port);
 server.listen(port);
 server.on('error', onError);
@@ -19,14 +18,11 @@ server.on('listening', onListening);
 app.engine('mustache', mustacheExpress('./views/partials', '.mustache'));
 app.set('views', './views');
 app.set('view engine', 'mustache');
-
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 const { SHOPIFY_API_KEY, SHOPIFY_API_SECRET, SHOPIFY_API_SCOPES, HOST } = process.env
-
-const shops = {};
 
 Shopify.Context.initialize({
     API_KEY: SHOPIFY_API_KEY,
@@ -36,11 +32,22 @@ Shopify.Context.initialize({
     IS_EMBEDDED_APP: true,
 });
 
-//typeof shops[req.query.shop] !== 'undefined'
+//const createApp = require('@shopify/shopify-api');
+// const app = createApp({
+//     apiKey: SHOPIFY_API_KEY,
+//     host: HOST
+// });
+const shops = {};
+
+
+// ROUTES
+//app.use("/", require('./routes/index.js'));
+app.use("/orders", require('./routes/orders.js'))
+
 app.get('/', async (req, res) => {
     if (shops !== {}) {
         console.log(req.query.shop)
-        res.send('Hello world/pslate!!!!!!!!!!!');
+        res.send('hello world!!');
     } else {
         res.redirect(`/auth?shop=${req.query.shop}`);
     }
@@ -63,30 +70,28 @@ app.get('/auth/shopify/callback', async (req, res) => {
         res,
         req.query
     );
-    //console.log(shopSession);
+    console.log(shopSession);
     shops[shopSession.shop] = shopSession;
-    //console.log(shops);
+    console.log(shops);
     res.redirect(`https://${shopSession.shop}/admin/apps/pslate-export`);
 });
+
 
 // error handler
 function onError(error) {
     if (error.syscall !== 'listen') {
         throw error;
     }
-
     const bind = typeof port === 'string' ? 'Pipe ' + port : 'Port ' + port;
-
-    // handle specific listen errors with friendly messages
     switch (error.code) {
         case 'EACCES':
             console.error(bind + ' requires elevated privileges');
             process.exit(1);
-            break;
+        //break;
         case 'EADDRINUSE':
             console.error(bind + ' is already in use');
             process.exit(1);
-            break;
+        //break;
         default:
             throw error;
     }
